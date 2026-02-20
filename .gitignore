@@ -7,8 +7,8 @@
 *.dll
 *.so
 *.dylib
-rnexus
-rnexus-*
+/rnexus
+/rnexus-*
 
 # Test binary, built with `go test -c`
 *.test
