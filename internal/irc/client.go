@@ -457,8 +457,14 @@ func (c *Client) onNickChange(e ircmsg.Message) {
 	oldNick := e.Nick()
 	log.Printf("Nick changed from %s to %s", oldNick, newNick)
 
-	// If services renamed us to a guest nick, re-authenticate and reclaim
-	if strings.HasPrefix(strings.ToLower(newNick), "guest") {
+	if strings.EqualFold(newNick, c.cfg.Nick) {
+		// Regained the primary nick — re-authenticate
+		if c.cfg.NickPass != "" {
+			log.Printf("Regained primary nick %s, identifying with NickServ", c.cfg.Nick)
+			c.conn.Privmsg("NickServ", fmt.Sprintf("IDENTIFY %s %s", c.cfg.Nick, c.cfg.NickPass))
+		}
+	} else if strings.HasPrefix(strings.ToLower(newNick), "guest") {
+		// Services renamed us to a guest nick — re-authenticate and reclaim
 		log.Printf("Renamed to guest nick by services, attempting to re-authenticate and reclaim %s", c.cfg.Nick)
 		if c.cfg.NickPass != "" {
 			c.conn.Privmsg("NickServ", fmt.Sprintf("IDENTIFY %s %s", c.cfg.Nick, c.cfg.NickPass))

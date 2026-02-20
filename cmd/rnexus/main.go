@@ -81,9 +81,14 @@ func daemonize() {
 		// Add -x flag to run in foreground (we're already daemonized)
 		args = append(args, "-x")
 
+		logFile, err := os.OpenFile("rnexus.log", os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
+		if err != nil {
+			log.Printf("Warning: could not open log file: %v", err)
+		}
+
 		cmd := exec.Command(args[0], args[1:]...)
-		cmd.Stdout = nil
-		cmd.Stderr = nil
+		cmd.Stdout = logFile
+		cmd.Stderr = logFile
 		cmd.Stdin = nil
 		cmd.Env = os.Environ()
 
