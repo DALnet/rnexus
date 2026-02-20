@@ -387,6 +387,9 @@ func (c *Client) onLinksEnd(e ircmsg.Message) {
 }
 
 func (c *Client) onNickHeld(e ircmsg.Message) {
+	if c.conn.CurrentNick() == c.cfg.Alternate {
+		return
+	}
 	log.Printf("Nick is held, switching to alternate: %s", c.cfg.Alternate)
 	c.conn.SetNick(c.cfg.Alternate)
 
@@ -400,6 +403,9 @@ func (c *Client) onNickHeld(e ircmsg.Message) {
 }
 
 func (c *Client) onNickInUse(e ircmsg.Message) {
+	if c.conn.CurrentNick() == c.cfg.Alternate {
+		return
+	}
 	log.Printf("Nick in use, switching to alternate: %s", c.cfg.Alternate)
 	c.conn.SetNick(c.cfg.Alternate)
 
