@@ -139,6 +139,9 @@ func (c *Client) registerHandlers() {
 	c.conn.AddCallback("432", c.onNickHeld)     // ERR_ERRONEUSNICKNAME
 	c.conn.AddCallback("433", c.onNickInUse)    // ERR_NICKNAMEINUSE
 
+	// Nick changes (e.g. services renaming us to a guest nick)
+	c.conn.AddCallback("NICK", c.onNickChange)
+
 	// WATCH logout notification
 	c.conn.AddCallback("601", c.onWatchLogout)  // RPL_LOGOFF
 
@@ -436,6 +439,37 @@ func (c *Client) onWatchLogout(e ircmsg.Message) {
 	c.mu.Unlock()
 
 	c.conn.SendRaw(fmt.Sprintf("WATCH -%s", nick))
+}
+
+func (c *Client) onNickChange(e ircmsg.Message) {
+	if len(e.Params) < 1 {
+		return
+	}
+
+	newNick := e.Params[0]
+
+	// ircevent updates CurrentNick() before firing callbacks, so if the new
+	// nick matches CurrentNick() this change is about us.
+	if !strings.EqualFold(newNick, c.conn.CurrentNick()) {
+		return
+	}
+
+	oldNick := e.Nick()
+	log.Printf("Nick changed from %s to %s", oldNick, newNick)
+
+	// If services renamed us to a guest nick, re-authenticate and reclaim
+	if strings.HasPrefix(strings.ToLower(newNick), "guest") {
+		log.Printf("Renamed to guest nick by services, attempting to re-authenticate and reclaim %s", c.cfg.Nick)
+		if c.cfg.NickPass != "" {
+			c.conn.Privmsg("NickServ", fmt.Sprintf("IDENTIFY %s %s", c.cfg.Nick, c.cfg.NickPass))
+		}
+		go func() {
+			time.Sleep(3 * time.Second)
+			c.conn.Privmsg("NickServ", fmt.Sprintf("RELEASE %s %s", c.cfg.Nick, c.cfg.NickPass))
+			time.Sleep(2 * time.Second)
+			c.conn.SetNick(c.cfg.Nick)
+		}()
+	}
 }
 
 func (c *Client) onCtcpVersion(e ircmsg.Message) {
