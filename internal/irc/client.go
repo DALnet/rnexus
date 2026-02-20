@@ -172,7 +172,7 @@ func (c *Client) onConnect(e ircmsg.Message) {
 
 	// Identify to NickServ
 	if c.cfg.NickPass != "" {
-		c.conn.Privmsg("NickServ", fmt.Sprintf("IDENTIFY %s %s", c.cfg.Nick, c.cfg.NickPass))
+		c.conn.Privmsg("NickServ@services.dal.net", fmt.Sprintf("IDENTIFY %s %s", c.cfg.Nick, c.cfg.NickPass))
 	}
 
 	// OPER up
@@ -280,6 +280,12 @@ func (c *Client) onNotice(e ircmsg.Message) {
 
 	from := e.Source
 	notice := e.Params[1]
+
+	// Log NickServ responses to help diagnose authentication issues
+	fromNick := strings.SplitN(from, "!", 2)[0]
+	if strings.EqualFold(fromNick, "NickServ") {
+		log.Printf("NickServ: %s", notice)
+	}
 
 	// Check for routing notices from DALnet servers
 	if (strings.HasSuffix(from, "dal.net") || strings.HasSuffix(from, "upenn.edu")) &&
@@ -399,7 +405,7 @@ func (c *Client) onNickHeld(e ircmsg.Message) {
 	// Schedule nick recovery
 	go func() {
 		time.Sleep(15 * time.Second)
-		c.conn.Privmsg("NickServ", fmt.Sprintf("RELEASE %s %s", c.cfg.Nick, c.cfg.NickPass))
+		c.conn.Privmsg("NickServ@services.dal.net", fmt.Sprintf("RELEASE %s %s", c.cfg.Nick, c.cfg.NickPass))
 		time.Sleep(2 * time.Second)
 		c.conn.SetNick(c.cfg.Nick)
 	}()
@@ -415,7 +421,7 @@ func (c *Client) onNickInUse(e ircmsg.Message) {
 	// Schedule nick recovery
 	go func() {
 		time.Sleep(15 * time.Second)
-		c.conn.Privmsg("NickServ", fmt.Sprintf("GHOST %s %s", c.cfg.Nick, c.cfg.NickPass))
+		c.conn.Privmsg("NickServ@services.dal.net", fmt.Sprintf("GHOST %s %s", c.cfg.Nick, c.cfg.NickPass))
 		time.Sleep(2 * time.Second)
 		c.conn.SetNick(c.cfg.Nick)
 	}()
@@ -461,17 +467,17 @@ func (c *Client) onNickChange(e ircmsg.Message) {
 		// Regained the primary nick — re-authenticate
 		if c.cfg.NickPass != "" {
 			log.Printf("Regained primary nick %s, identifying with NickServ", c.cfg.Nick)
-			c.conn.Privmsg("NickServ", fmt.Sprintf("IDENTIFY %s %s", c.cfg.Nick, c.cfg.NickPass))
+			c.conn.Privmsg("NickServ@services.dal.net", fmt.Sprintf("IDENTIFY %s %s", c.cfg.Nick, c.cfg.NickPass))
 		}
 	} else if strings.HasPrefix(strings.ToLower(newNick), "guest") {
 		// Services renamed us to a guest nick — re-authenticate and reclaim
 		log.Printf("Renamed to guest nick by services, attempting to re-authenticate and reclaim %s", c.cfg.Nick)
 		if c.cfg.NickPass != "" {
-			c.conn.Privmsg("NickServ", fmt.Sprintf("IDENTIFY %s %s", c.cfg.Nick, c.cfg.NickPass))
+			c.conn.Privmsg("NickServ@services.dal.net", fmt.Sprintf("IDENTIFY %s %s", c.cfg.Nick, c.cfg.NickPass))
 		}
 		go func() {
 			time.Sleep(3 * time.Second)
-			c.conn.Privmsg("NickServ", fmt.Sprintf("RELEASE %s %s", c.cfg.Nick, c.cfg.NickPass))
+			c.conn.Privmsg("NickServ@services.dal.net", fmt.Sprintf("RELEASE %s %s", c.cfg.Nick, c.cfg.NickPass))
 			time.Sleep(2 * time.Second)
 			c.conn.SetNick(c.cfg.Nick)
 		}()
