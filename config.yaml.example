@@ -1,0 +1,15 @@
+# rnexus configuration example
+# Copy this file to config.yaml and fill in your values
+
+nick: rnexus
+nick_pass: "your_nickserv_password"
+alternate: rnexus_
+server: "127.0.0.1"
+port: 31800
+server_pass: "routing:oper_nick:password"
+irc_name: "The Routing Nexus"
+username: routing
+oper_nick: routing
+oper_pass: "your_oper_password"
+admin_pass: "your_admin_password"
+data_dir: "./data"

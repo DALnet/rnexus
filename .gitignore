@@ -7,6 +7,8 @@
 *.dll
 *.so
 *.dylib
+rnexus
+rnexus-*
 
 # Test binary, built with `go test -c`
 *.test
@@ -27,6 +29,28 @@ go.work.sum
 # env file
 .env
 
+# PID file
+pid.txt
+
+# Log files
+*.log
+
+# Data files (keep .gitkeep)
+data/logs.txt
+data/stats.txt
+data/motd.txt
+data/rmap.txt
+
+# Config with secrets (use config.yaml.example as template)
+config.yaml
+
 # Editor/IDE
-# .idea/
-# .vscode/
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
