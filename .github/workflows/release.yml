@@ -30,10 +30,10 @@ jobs:
           go build \
             -trimpath \
             -ldflags "-X main.version=${{ github.ref_name }} -X main.buildDate=$(date -u +%Y-%m-%dT%H:%M:%SZ) -X main.gitCommit=${{ github.sha }}" \
-            -o rnexus-linux-amd64 \
+            -o rnexus-${{ github.ref_name }}-linux-amd64 \
             ./cmd/rnexus
 
       - name: Upload binary to release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: gh release upload ${{ github.ref_name }} rnexus-linux-amd64
+        run: gh release upload ${{ github.ref_name }} rnexus-${{ github.ref_name }}-linux-amd64
